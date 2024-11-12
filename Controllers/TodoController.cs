@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 using CSharpTodoWithDapper.Data;
+using CSharpTodoWithDapper.Services;
 
 namespace CSharpTodoWithDapper.Controllers;
 
@@ -9,19 +10,23 @@ namespace CSharpTodoWithDapper.Controllers;
 public class TodoController : ControllerBase
 {
     private readonly ILogger<TodoController> _logger;
+    // finish moving items to the service layer and remove _todoRepository from the constructor
     private readonly ITodoRepository _todoRepository;
+    private readonly ITodoService _todoService;
     public static List<Todo> Todos = new List<Todo>();
-    public TodoController(ILogger<TodoController> logger, ITodoRepository todoRepository)
+    public TodoController(ILogger<TodoController> logger, ITodoRepository todoRepository, ITodoService todoService)
     {
         _logger = logger;
         _todoRepository = todoRepository;
+        _todoService = todoService;
     }
 
     [HttpGet(Name = "GetAllTodos")]
     public async Task<List<Todo>> GetAsync()
     {
-        var todos = await _todoRepository.GetAllTodosAsync();
-        return todos.OrderBy(x => x.Id).ToList();
+        // TODO: Add error handling
+        var todos =  await _todoService.GetAllAsync();
+        return todos; 
     }
 
     [HttpGet("search", Name = "Find todos")]
@@ -53,5 +58,6 @@ public class TodoController : ControllerBase
         _logger.LogInformation($"Added todo item: {todo.Description}");
         return Ok("Todo successfully added.");
     }
-
+    
+    // implement put and delete
 }
