@@ -11,7 +11,7 @@ public class TodoController : ControllerBase
     private readonly ILogger<TodoController> _logger;
     private readonly ITodoRepository _todoRepository;
     public static List<Todo> Todos = new List<Todo>();
-    public TodoController(ILogger<TodoController> logger, TodoRepository todoRepository)
+    public TodoController(ILogger<TodoController> logger, ITodoRepository todoRepository)
     {
         _logger = logger;
         _todoRepository = todoRepository;
@@ -50,6 +50,7 @@ public class TodoController : ControllerBase
     public async Task<IActionResult> PostAsync(Todo todo)
     {
         await _todoRepository.AddTodoAsync(todo); 
+        _logger.LogInformation($"Added todo item: {todo.Description}");
         return Ok("Todo successfully added.");
     }
 

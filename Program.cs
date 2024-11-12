@@ -7,7 +7,7 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 // Add services to the container.
 builder.Services.AddSingleton(new DbConnectionFactory(connectionString));
 builder.Services.AddControllers();
-builder.Services.AddSingleton<TodoRepository>();
+builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
