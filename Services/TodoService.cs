@@ -30,7 +30,7 @@ namespace CSharpTodoWithDapper.Services
         {
             if (string.IsNullOrWhiteSpace(query))
             {
-                throw new ArgumentException("Mising or invalid query");
+                throw new ArgumentNullException("Mising or invalid query");
             }
 
             var todos = await _todoRepository.GetAllTodosAsync();
@@ -43,5 +43,13 @@ namespace CSharpTodoWithDapper.Services
             return matched;
         }
 
+        public async Task CreateAsync(Todo todo)
+        {
+            if(string.IsNullOrWhiteSpace(todo.Description))
+            {
+                throw new ArgumentNullException($"Missing required field {todo.Description}");
+            }
+            await _todoRepository.AddTodoAsync(todo);
+        }
     }
 }

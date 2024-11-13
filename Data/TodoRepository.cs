@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using System.Data;
+using System.Data.SQLite;
 
 namespace CSharpTodoWithDapper.Data
 {
@@ -16,13 +17,20 @@ namespace CSharpTodoWithDapper.Data
 
         public async Task AddTodoAsync(Todo todo)
         {
-            using (IDbConnection conn = _dbConnectionFactory.Connect())
+            try
             {
-                var completed = todo.Completed ? 1 : 0;
-                var comm = $"INSERT INTO Todo(Description, Completed) VALUES ('{todo.Description}', {completed})";
-                await conn.ExecuteAsync(comm);
+                var insertQuery = "INSERT INTO Todo(Description, Completed) VALUES (@Description, @Completed)";
+                using (IDbConnection conn = _dbConnectionFactory.Connect())
+                {
+                    await conn.ExecuteAsync(insertQuery, todo);
+                }
             }
-        }
+            catch (SQLiteException ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+       }
 
         public async Task<List<Todo>> GetAllTodosAsync()
         {
@@ -33,7 +41,7 @@ namespace CSharpTodoWithDapper.Data
                     var comm = "SELECT * FROM Todo";
                     var queryResult = await conn.QueryAsync<Todo>(comm);
 
-                    return queryResult.ToList(); 
+                    return queryResult.ToList();
                 }
             }
             catch (Exception ex)
@@ -41,6 +49,6 @@ namespace CSharpTodoWithDapper.Data
                 _logger.LogError(ex.Message);
                 throw;
             }
-       }
+        }
     }
 }
