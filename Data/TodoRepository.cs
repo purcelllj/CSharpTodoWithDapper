@@ -6,10 +6,12 @@ namespace CSharpTodoWithDapper.Data
     public class TodoRepository : ITodoRepository
     {
         private readonly DbConnectionFactory _dbConnectionFactory;
+        private readonly ILogger<TodoRepository> _logger;
 
-        public TodoRepository(DbConnectionFactory dbConnectionFactory)
+        public TodoRepository(DbConnectionFactory dbConnectionFactory, ILogger<TodoRepository> logger)
         {
             _dbConnectionFactory = dbConnectionFactory;
+            _logger = logger;
         }
 
         public async Task AddTodoAsync(Todo todo)
@@ -24,13 +26,21 @@ namespace CSharpTodoWithDapper.Data
 
         public async Task<List<Todo>> GetAllTodosAsync()
         {
-            using (IDbConnection conn = _dbConnectionFactory.Connect())
+            try
             {
-                var comm = "SELECT * FROM Todo";
-                var queryResult = await conn.QueryAsync<Todo>(comm);
+                using (IDbConnection conn = _dbConnectionFactory.Connect())
+                {
+                    var comm = "SELECT * FROM Todo";
+                    var queryResult = await conn.QueryAsync<Todo>(comm);
 
-                return queryResult.ToList(); 
+                    return queryResult.ToList(); 
+                }
             }
-        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+       }
     }
 }
