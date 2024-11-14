@@ -10,8 +10,7 @@ public class TodoController : ControllerBase
 {
     // finish moving items to the service layer and remove _todoRepository from the constructor
     private readonly ITodoService _todoService;
-    public static List<Todo> Todos = new List<Todo>();
-    public TodoController(ITodoRepository todoRepository, ITodoService todoService)
+    public TodoController(ITodoService todoService)
     {
         _todoService = todoService;
     }
@@ -31,6 +30,21 @@ public class TodoController : ControllerBase
 
     }
 
+    [HttpGet("{id}", Name = "GetTodoById")]
+    public async Task<IActionResult> GetByIdAsync(int id)
+    {
+        try
+        {
+            var todo = await _todoService.FindByIdAsync(id);
+            return Ok(todo);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "An unexpected error occurred." });
+        }
+
+    }
+    
     [HttpGet("search", Name = "Find todos")]
     public async Task<IActionResult> GetMatching([FromQuery] string query)
     {
@@ -61,9 +75,9 @@ public class TodoController : ControllerBase
     {
         try
         {
-            await _todoService.CreateAsync(todo);
-
-            return Ok(new ApiResponse("OK", $"Created todo with description '{todo.Description}'."));
+            var createdTodo = await _todoService.CreateAsync(todo);
+            return CreatedAtAction(nameof(GetByIdAsync), new { id = createdTodo.Id }, createdTodo);
+                //new ApiResponse("OK", $"Created todo with description '{todo.Description}'."));
         }
         catch (ArgumentNullException ex)
         {

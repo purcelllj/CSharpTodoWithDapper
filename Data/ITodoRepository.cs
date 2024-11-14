@@ -2,7 +2,8 @@
 {
     public interface ITodoRepository
     {
-        Task AddTodoAsync(Todo todo);
+        Task<Todo> AddTodoAsync(Todo todo);
+        Task<Todo> GetTodoByIdAsync(int id);
         Task<List<Todo>> GetAllTodosAsync();
     }
 }

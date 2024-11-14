@@ -1,4 +1,5 @@
 ﻿using CSharpTodoWithDapper.Data;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 
 namespace CSharpTodoWithDapper.Services
@@ -26,6 +27,23 @@ namespace CSharpTodoWithDapper.Services
 
         }
 
+        public async Task<Todo> FindByIdAsync(int id)
+        {
+            try
+            {
+                var todo = await _todoRepository.GetTodoByIdAsync(id);
+                if (todo is null)
+                {
+                    throw new KeyNotFoundException($"Item with id '{id}' was not found");
+                }
+                return todo;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+
+        }
         public async Task<List<Todo>> SearchAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
@@ -43,13 +61,14 @@ namespace CSharpTodoWithDapper.Services
             return matched;
         }
 
-        public async Task CreateAsync(Todo todo)
+        public async Task<Todo> CreateAsync(Todo todo)
         {
             if(string.IsNullOrWhiteSpace(todo.Description))
             {
                 throw new ArgumentNullException($"Missing required field {todo.Description}");
             }
-            await _todoRepository.AddTodoAsync(todo);
+            var createdTodo = await _todoRepository.AddTodoAsync(todo);
+            return createdTodo; 
         }
     }
 }

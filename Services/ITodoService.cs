@@ -4,6 +4,7 @@
     {
         Task<List<Todo>> GetAllAsync();
         Task<List<Todo>> SearchAsync(string query);
-        Task CreateAsync(Todo todo);
+        Task<Todo> FindByIdAsync(int id);
+        Task<Todo> CreateAsync(Todo todo);
     }
 }
