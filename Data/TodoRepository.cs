@@ -1,7 +1,7 @@
-﻿using Dapper;
+﻿using CSharpTodoWithDapper.Models;
+using Dapper;
 using System.Data;
 using System.Data.SQLite;
-using System.Linq;
 
 namespace CSharpTodoWithDapper.Data
 {
@@ -25,12 +25,8 @@ namespace CSharpTodoWithDapper.Data
                 using (IDbConnection conn = _dbConnectionFactory.Connect())
                 {
                     var id = await conn.ExecuteScalarAsync<int>(insertQuery, todo);
-                    var getResult = await conn.ExecuteScalarAsync<Todo>(getTodoQuery, new { Id = id});
-                    if (getResult == null)
-                    {
-                        throw new Exception();
-                    }
-                    var createdTodo = new Todo { Id = getResult.Id, Description = getResult.Description, Completed = getResult.Completed };
+                    var getResult = await conn.QueryAsync<Todo>(getTodoQuery, new { Id = id });
+                    var createdTodo = getResult?.SingleOrDefault(x => x.Id == id);
 
                     return createdTodo;
                 }
@@ -38,11 +34,7 @@ namespace CSharpTodoWithDapper.Data
             catch (SQLiteException ex)
             {
                 _logger.LogError(ex.Message);
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
+                throw; 
             }
         }
 

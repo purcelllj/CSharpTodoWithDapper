@@ -1,4 +1,6 @@
-﻿namespace CSharpTodoWithDapper.Data
+﻿using CSharpTodoWithDapper.Models;
+
+namespace CSharpTodoWithDapper.Data
 {
     public interface ITodoRepository
     {

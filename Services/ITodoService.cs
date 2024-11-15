@@ -1,4 +1,6 @@
-﻿namespace CSharpTodoWithDapper.Services
+﻿using CSharpTodoWithDapper.Models;
+
+namespace CSharpTodoWithDapper.Services
 {
     public interface ITodoService
     {

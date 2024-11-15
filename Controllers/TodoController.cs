@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using CSharpTodoWithDapper.Data;
 using CSharpTodoWithDapper.Services;
+using CSharpTodoWithDapper.Models;
+using static CSharpTodoWithDapper.Controllers.TodoRoutes;
 
 namespace CSharpTodoWithDapper.Controllers;
 
@@ -15,7 +17,7 @@ public class TodoController : ControllerBase
         _todoService = todoService;
     }
 
-    [HttpGet(Name = "GetAllTodos")]
+    [HttpGet(Name = "GetAll")]
     public async Task<IActionResult> GetAsync()
     {
         try
@@ -30,7 +32,7 @@ public class TodoController : ControllerBase
 
     }
 
-    [HttpGet("{id}", Name = "GetTodoById")]
+    [HttpGet("{id}", Name = "GetById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
         try
@@ -44,8 +46,8 @@ public class TodoController : ControllerBase
         }
 
     }
-    
-    [HttpGet("search", Name = "Find todos")]
+
+    [HttpGet("find", Name = "Query")]
     public async Task<IActionResult> GetMatching([FromQuery] string query)
     {
         try
@@ -70,24 +72,19 @@ public class TodoController : ControllerBase
         }
     }
 
-    [HttpPost(Name = "Add todo item")]
+    [HttpPost(Name = "CreateTodo")]
     public async Task<IActionResult> PostAsync(Todo todo)
-    {
-        try
-        {
-            var createdTodo = await _todoService.CreateAsync(todo);
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = createdTodo.Id }, createdTodo);
-                //new ApiResponse("OK", $"Created todo with description '{todo.Description}'."));
-        }
-        catch (ArgumentNullException ex)
-        {
-            return BadRequest(new ApiResponse("Bad Request", ex.Message));
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, new { message = "An unexpected error occurred." });
-        }
+    { 
+        var createdTodo = await _todoService.CreateAsync(todo);
+        return CreatedAtAction(GetById, new { id = createdTodo.Id }, createdTodo);
     }
 
-    // implement put and delete
+}
+
+public static class TodoRoutes
+{
+    public const string GetById = "GetById";
+    public const string GetAll = "GetAll";
+    public const string Query = "Query";
+    public const string CreateTodo = "CreateTodo";
 }

@@ -1,4 +1,4 @@
-namespace CSharpTodoWithDapper;
+namespace CSharpTodoWithDapper.Models;
 
 public class Todo
 {

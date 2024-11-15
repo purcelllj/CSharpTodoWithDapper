@@ -1,6 +1,7 @@
 ﻿using CSharpTodoWithDapper.Data;
-using Microsoft.AspNetCore.Mvc;
+using CSharpTodoWithDapper.Models;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CSharpTodoWithDapper.Services
 {
@@ -29,26 +30,18 @@ namespace CSharpTodoWithDapper.Services
 
         public async Task<Todo> FindByIdAsync(int id)
         {
-            try
+            if (id == 0)
             {
-                var todo = await _todoRepository.GetTodoByIdAsync(id);
-                if (todo is null)
-                {
-                    throw new KeyNotFoundException($"Item with id '{id}' was not found");
-                }
-                return todo;
+                throw new ArgumentException("Invalid \"Id\" provided as an argument.");
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-
+            var todo = await _todoRepository.GetTodoByIdAsync(id);
+            return todo;
         }
         public async Task<List<Todo>> SearchAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
-                throw new ArgumentNullException("Mising or invalid query");
+                throw new ArgumentNullException("Missing valid query.");
             }
 
             var todos = await _todoRepository.GetAllTodosAsync();
@@ -63,12 +56,12 @@ namespace CSharpTodoWithDapper.Services
 
         public async Task<Todo> CreateAsync(Todo todo)
         {
-            if(string.IsNullOrWhiteSpace(todo.Description))
+            if (string.IsNullOrWhiteSpace(todo.Description))
             {
-                throw new ArgumentNullException($"Missing required field {todo.Description}");
+                throw new ArgumentNullException("Missing required field \"Description\".");
             }
             var createdTodo = await _todoRepository.AddTodoAsync(todo);
-            return createdTodo; 
+            return createdTodo;
         }
     }
 }
