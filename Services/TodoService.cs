@@ -1,7 +1,6 @@
 ﻿using CSharpTodoWithDapper.Data;
 using CSharpTodoWithDapper.Models;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Mvc;
 
 namespace CSharpTodoWithDapper.Services
 {

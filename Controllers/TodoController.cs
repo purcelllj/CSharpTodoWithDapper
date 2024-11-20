@@ -1,5 +1,5 @@
+using CSharpTodoWithDapper.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using CSharpTodoWithDapper.Data;
 using CSharpTodoWithDapper.Services;
 using CSharpTodoWithDapper.Models;
 using static CSharpTodoWithDapper.Controllers.TodoRoutes;
@@ -62,10 +62,6 @@ public class TodoController : ControllerBase
             return Ok(matchedTodos);
 
         }
-        catch (ArgumentNullException ex)
-        {
-            return BadRequest(ex.Message);
-        }
         catch (Exception)
         {
             return StatusCode(500, new { message = "An unexpected error occurred." });
@@ -74,7 +70,12 @@ public class TodoController : ControllerBase
 
     [HttpPost(Name = "CreateTodo")]
     public async Task<IActionResult> PostAsync(Todo todo)
-    { 
+    {
+        var result = TodoValidator.ValidateTodo(todo);
+        if (!result.IsValid)
+        {
+            return BadRequest(result.Errors.Select(x => new { x.PropertyName, x.ErrorMessage }));
+        }
         var createdTodo = await _todoService.CreateAsync(todo);
         return CreatedAtAction(GetById, new { id = createdTodo.Id }, createdTodo);
     }

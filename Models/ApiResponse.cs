@@ -1,4 +1,4 @@
-﻿namespace CSharpTodoWithDapper.Data
+﻿namespace CSharpTodoWithDapper.Models
 {
     public class ApiResponse
     {
