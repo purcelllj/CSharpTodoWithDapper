@@ -7,5 +7,6 @@ namespace CSharpTodoWithDapper.Data
         Task<Todo> AddTodoAsync(Todo todo);
         Task<Todo> GetTodoByIdAsync(int id);
         Task<List<Todo>> GetAllTodosAsync();
+        Task<Todo> UpdateTodoAsync(Todo todo, int id);
     }
 }

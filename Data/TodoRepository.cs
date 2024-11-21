@@ -2,6 +2,7 @@
 using Dapper;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq.Expressions;
 
 namespace CSharpTodoWithDapper.Data
 {
@@ -18,23 +19,30 @@ namespace CSharpTodoWithDapper.Data
 
         public async Task<Todo> AddTodoAsync(Todo todo)
         {
+            var insertQuery = "INSERT INTO Todo(Description, Completed) VALUES (@Description, @Completed); SELECT last_insert_rowid();";
+            var getTodoQuery = "SELECT * FROM Todo WHERE Id = @Id";
             try
             {
-                var insertQuery = "INSERT INTO Todo(Description, Completed) VALUES (@Description, @Completed); SELECT last_insert_rowid();";
-                var getTodoQuery = "SELECT * FROM Todo WHERE Id = @Id";
                 using (IDbConnection conn = _dbConnectionFactory.Connect())
                 {
                     var id = await conn.ExecuteScalarAsync<int>(insertQuery, todo);
-                    var getResult = await conn.QueryAsync<Todo>(getTodoQuery, new { Id = id });
-                    var createdTodo = getResult?.SingleOrDefault(x => x.Id == id);
 
-                    return createdTodo;
+                    var getResult = await conn.QueryAsync<Todo>(getTodoQuery, new { Id = id });
+                    var createdTodo = getResult.SingleOrDefault(x => x.Id == id);
+
+                    if (createdTodo == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Something went wrong. Unable to retrieve the created todo");
+                    }
+                    
+                    return createdTodo;  
                 }
             }
             catch (SQLiteException ex)
             {
-                _logger.LogError(ex.Message);
-                throw; 
+                throw new ApplicationException(
+                    $"There was a problem with one of the database queries attempted.\nMessage: {ex.Message}");
             }
         }
 
@@ -51,12 +59,7 @@ namespace CSharpTodoWithDapper.Data
             }
             catch (SQLiteException ex)
             {
-                _logger.LogError(ex.Message);
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
+                throw new ApplicationException($"There was a problem with one of the database queries attempted.\nMessage: {ex.Message}");
             }
         }
 
@@ -64,9 +67,9 @@ namespace CSharpTodoWithDapper.Data
         {
             try
             {
+                var comm = "SELECT * FROM Todo";
                 using (IDbConnection conn = _dbConnectionFactory.Connect())
                 {
-                    var comm = "SELECT * FROM Todo";
                     var queryResult = await conn.QueryAsync<Todo>(comm);
 
                     return queryResult.ToList();
@@ -74,12 +77,27 @@ namespace CSharpTodoWithDapper.Data
             }
             catch (SQLiteException ex)
             {
-                _logger.LogError(ex.Message);
-                throw;
+                throw new ApplicationException(
+                    $"There was a problem with one of the database queries attempted.\nMessage: {ex.Message}");
             }
-            catch (Exception)
+        }
+
+        public async Task<Todo> UpdateTodoAsync(Todo todo, int id)
+        {
+            try
             {
-                throw;
+                var updateQuery = "UPDATE Todo SET Description = @Description, Completed = @Completed;";
+                var selectQuery = "SELECT * FROM Todo WHERE Id = @Id;";
+                using (IDbConnection conn = _dbConnectionFactory.Connect())
+                {
+                    await conn.ExecuteScalarAsync(updateQuery, todo);
+                    var result = await conn.QuerySingleAsync<Todo>(selectQuery, new { Id = id});
+                    return result;
+                }
+            }
+            catch (SQLiteException ex)
+            {
+                throw new ApplicationException($"There was a problem with one of the database queries attempted.\nMessage: {ex.Message}");
             }
         }
     }

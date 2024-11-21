@@ -29,20 +29,18 @@ namespace CSharpTodoWithDapper.Services
 
         public async Task<Todo> FindByIdAsync(int id)
         {
-            if (id == 0)
+            try
             {
-                throw new ArgumentException("Invalid \"Id\" provided as an argument.");
+                var todo = await _todoRepository.GetTodoByIdAsync(id);
+                return todo;
             }
-            var todo = await _todoRepository.GetTodoByIdAsync(id);
-            return todo;
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
         public async Task<List<Todo>> SearchAsync(string query)
         {
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                throw new ArgumentNullException("Missing valid query.");
-            }
-
             var todos = await _todoRepository.GetAllTodosAsync();
 
             var matched = todos
@@ -55,12 +53,14 @@ namespace CSharpTodoWithDapper.Services
 
         public async Task<Todo> CreateAsync(Todo todo)
         {
-            if (string.IsNullOrWhiteSpace(todo.Description))
-            {
-                throw new ArgumentNullException("Missing required field \"Description\".");
-            }
             var createdTodo = await _todoRepository.AddTodoAsync(todo);
             return createdTodo;
+        }
+
+        public async Task<Todo> UpdateAsync(Todo todo, int id)
+        {
+            var updatedTodo = await _todoRepository.UpdateTodoAsync(todo, id);
+            return updatedTodo;
         }
     }
 }

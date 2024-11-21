@@ -8,7 +8,7 @@ namespace CSharpTodoWithDapper.Helpers
     {
         public TodoValidator()
         {
-            RuleFor(todo => todo.Description).NotEmpty();
+            RuleFor(todo => todo.Description).NotEmpty().WithMessage("Description is a required field.");
         }
         
         public static ValidationResult ValidateTodo(Todo todo)
