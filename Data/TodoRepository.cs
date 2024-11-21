@@ -2,10 +2,18 @@
 using Dapper;
 using System.Data;
 using System.Data.SQLite;
-using System.Linq.Expressions;
 
 namespace CSharpTodoWithDapper.Data
 {
+    public interface ITodoRepository
+    {
+        Task<Todo> AddTodoAsync(Todo todo);
+        Task<List<Todo>> GetTodoByIdAsync(int id);
+        Task<List<Todo>> GetAllTodosAsync();
+        Task<List<Todo>> GetMatchingTodosAsync(string query);
+        Task<Todo> UpdateTodoAsync(Todo todo, int id);
+        Task DeleteTodoAsync(int id);
+    }
     public class TodoRepository : ITodoRepository
     {
         private readonly DbConnectionFactory _dbConnectionFactory;
@@ -46,15 +54,15 @@ namespace CSharpTodoWithDapper.Data
             }
         }
 
-        public async Task<Todo> GetTodoByIdAsync(int id)
+        public async Task<List<Todo>> GetTodoByIdAsync(int id)
         {
             try
             {
                 var comm = "SELECT * FROM Todo WHERE Id = @Id";
                 using (var conn = _dbConnectionFactory.Connect())
                 {
-                    var queryResult = await conn.QuerySingleAsync<Todo>(comm, new { Id = id });
-                    return queryResult;
+                    var queryResult = await conn.QueryAsync<Todo>(comm, new { Id = id });
+                    return queryResult.ToList();
                 }
             }
             catch (SQLiteException ex)
@@ -71,7 +79,24 @@ namespace CSharpTodoWithDapper.Data
                 using (var conn = _dbConnectionFactory.Connect())
                 {
                     var queryResult = await conn.QueryAsync<Todo>(comm);
+                    return queryResult.ToList();
+                }
+            }
+            catch (SQLiteException ex)
+            {
+                throw new ApplicationException(
+                    $"There was a problem with one of the database queries attempted.\nMessage: {ex.Message}");
+            }
+        }
 
+        public async Task<List<Todo>> GetMatchingTodosAsync(string query)
+        {
+            try
+            {
+                var comm = "SELECT * FROM Todo WHERE Description LIKE @Query;";
+                using (var conn = _dbConnectionFactory.Connect())
+                {
+                    var queryResult = await conn.QueryAsync<Todo>(comm, new { Query = $"%{query}%" });
                     return queryResult.ToList();
                 }
             }
