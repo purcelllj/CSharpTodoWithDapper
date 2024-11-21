@@ -115,7 +115,7 @@ public class TodoController : ControllerBase
                 todo.Description != null && todo.Description != existingDescription ? 
                     todo.Description : existingDescription,
             Completed = 
-                todo.Completed != null && todo.Completed != existingCompletedStatus ? 
+                todo.Completed != existingCompletedStatus ? 
                     todo.Completed : existingCompletedStatus 
         };
         
