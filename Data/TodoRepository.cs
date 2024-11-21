@@ -51,7 +51,7 @@ namespace CSharpTodoWithDapper.Data
             try
             {
                 var comm = "SELECT * FROM Todo WHERE Id = @Id";
-                using (IDbConnection conn = _dbConnectionFactory.Connect())
+                using (var conn = _dbConnectionFactory.Connect())
                 {
                     var queryResult = await conn.QuerySingleAsync<Todo>(comm, new { Id = id });
                     return queryResult;
@@ -68,7 +68,7 @@ namespace CSharpTodoWithDapper.Data
             try
             {
                 var comm = "SELECT * FROM Todo";
-                using (IDbConnection conn = _dbConnectionFactory.Connect())
+                using (var conn = _dbConnectionFactory.Connect())
                 {
                     var queryResult = await conn.QueryAsync<Todo>(comm);
 
@@ -86,13 +86,29 @@ namespace CSharpTodoWithDapper.Data
         {
             try
             {
-                var updateQuery = "UPDATE Todo SET Description = @Description, Completed = @Completed;";
+                var updateQuery = "UPDATE Todo SET Description = @Description, Completed = @Completed WHERE Id = @Id;";
                 var selectQuery = "SELECT * FROM Todo WHERE Id = @Id;";
-                using (IDbConnection conn = _dbConnectionFactory.Connect())
+                using (var conn = _dbConnectionFactory.Connect())
                 {
-                    await conn.ExecuteScalarAsync(updateQuery, todo);
+                    await conn.ExecuteScalarAsync(updateQuery, new { todo.Description, todo.Completed, Id = id });
                     var result = await conn.QuerySingleAsync<Todo>(selectQuery, new { Id = id});
                     return result;
+                }
+            }
+            catch (SQLiteException ex)
+            {
+                throw new ApplicationException($"There was a problem with one of the database queries attempted.\nMessage: {ex.Message}");
+            }
+        }
+
+        public async Task DeleteTodoAsync(int id)
+        {
+            try
+            {
+                var deleteQuery = "DELETE FROM Todo WHERE Id = @Id;";
+                using (var conn = _dbConnectionFactory.Connect())
+                {
+                    await conn.ExecuteAsync(deleteQuery, new { Id = id });
                 }
             }
             catch (SQLiteException ex)

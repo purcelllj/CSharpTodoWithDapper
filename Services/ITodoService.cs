@@ -9,5 +9,6 @@ namespace CSharpTodoWithDapper.Services
         Task<Todo> FindByIdAsync(int id);
         Task<Todo> CreateAsync(Todo todo);
         Task<Todo> UpdateAsync(Todo todo, int id);
+        Task DeleteAsync(int id);
     }
 }

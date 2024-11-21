@@ -39,9 +39,9 @@ public class TodoController : ControllerBase
     [HttpGet("{id}", Name = "GetById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
-        if (id <= 1)
+        if (id < 1)
         {
-            return BadRequest($"Invalid \"Id\" of {id}.");
+            return BadRequest(new ApiResponse("Bad Request", $"Invalid Id of {id}."));
         }
         try
         {
@@ -133,6 +133,25 @@ public class TodoController : ControllerBase
         }
     }
 
+    [HttpDelete("{id}", Name = "DeleteTodo")]
+    public async Task<IActionResult> DeleteTodoAsync([FromRoute]int id)
+    {
+        if (id < 1)
+        {
+            return BadRequest(new ApiResponse("Bad Request", $"Invalid Id of {id}."));
+        }
+        try
+        {
+            await _todoService.DeleteAsync(id);
+            return Ok(new ApiResponse("OK", $"Todo with id of {id} has been deleted successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            return StatusCode(500, new { message = "An unexpected error occurred." });
+        } 
+    }
+
 }
 
 public static class TodoRoutes
@@ -142,4 +161,5 @@ public static class TodoRoutes
     public const string Query = "Query";
     public const string CreateTodo = "CreateTodo";
     public const string UpdateTodo = "UpdateTodo";
+    public const string DeleteTodo = "DeleteTodo";
 }

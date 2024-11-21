@@ -59,8 +59,27 @@ namespace CSharpTodoWithDapper.Services
 
         public async Task<Todo> UpdateAsync(Todo todo, int id)
         {
-            var updatedTodo = await _todoRepository.UpdateTodoAsync(todo, id);
-            return updatedTodo;
+            try
+            {
+                var updatedTodo = await _todoRepository.UpdateTodoAsync(todo, id);
+                return updatedTodo;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            try
+            {
+                await _todoRepository.DeleteTodoAsync(id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }
