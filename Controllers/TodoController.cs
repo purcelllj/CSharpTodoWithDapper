@@ -17,9 +17,32 @@ public class TodoController : ControllerBase
         _logger = logger;
     }
 
-    [HttpGet(Name = "GetAll")]
-    public async Task<IActionResult> GetAsync()
+    [HttpGet(Name = "GetTodos")]
+    public async Task<IActionResult> GetAsync([FromQuery]string? query)
     {
+        // if query param exists, look for matching todos
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            try
+            {
+                var matchedTodos = await _todoRepository.GetMatchingTodosAsync(query);
+
+                if (matchedTodos.Count == 0)
+                {
+                    return NotFound(new { message = "The query returned 0 results."});
+                }
+
+                return Ok(matchedTodos);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return Problem("An unexpected error occurred.");
+            }
+        }
+        
+        // get all todos
         try
         {
             var todos = await _todoRepository.GetAllTodosAsync();
@@ -28,11 +51,10 @@ public class TodoController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            return StatusCode(500, new { error = "An unexpected error occurred." });
+            return Problem("An unexpected error occurred.");
         }
-
     }
-
+    
     [HttpGet("{id}", Name = "GetById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
@@ -52,45 +74,14 @@ public class TodoController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            return StatusCode(500, new { error = "An unexpected error occurred." });
+            return Problem("An unexpected error occurred.");
         }
 
-    }
-
-    [HttpGet("find", Name = "Query")]
-    public async Task<IActionResult> GetMatching([FromQuery] string query)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return BadRequest(new { message = "Missing valid query." });
-        }
-
-        try
-        {
-            var matchedTodos = await _todoRepository.GetMatchingTodosAsync(query);
-
-            if (matchedTodos.Count == 0)
-            {
-                return NotFound(new { message = "The query returned 0 results."});
-            }
-
-            return Ok(matchedTodos);
-
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message);
-            return StatusCode(500, new { error = "An unexpected error occurred." });
-        }
     }
 
     [HttpPost(Name = "CreateTodo")]
-    public async Task<IActionResult> PostAsync(Todo todo)
+    public async Task<IActionResult> PostAsync(CreateTodoRequest todo)
     {
-        if (string.IsNullOrEmpty(todo.Description))
-        {
-            return BadRequest(new { messsage = "'Description' is a required field." });
-        }
         try
         {
             var createdTodo = await _todoRepository.AddTodoAsync(todo);
@@ -99,37 +90,17 @@ public class TodoController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
-            return StatusCode(500, new { error = "An unexpected error occurred." });
+            return Problem("An unexpected error occurred.");
         } 
     }
 
     [HttpPut("{id}", Name = "UpdateTodo")]
-    public async Task<IActionResult> PutAsync([FromRoute] int id, [FromBody] Todo? todo)
+    public async Task<IActionResult> PutAsync([FromRoute] int id, [FromBody] UpdateTodoRequest todo)
     {
-        // Get existing by id
-        var getByIdResult = await _todoRepository.GetTodoByIdAsync(id);
-        if (getByIdResult.Count < 1)
-        {
-            return NotFound(new { message = $"No todo found with the Id of {id}."});
-        }
-        var todoToUpdate = getByIdResult.Single();
-        
-        var (existingDescription, existingCompletedStatus) = (
-            todoToUpdate.Description, todoToUpdate.Completed);
-         
-        // Build update request 
-        var description = !string.IsNullOrEmpty(todo.Description) ? todo.Description : existingDescription;
-        var completed = !todo.Completed ? existingCompletedStatus : todo.Completed;
-        var updatedTodoRequest = new Todo
-        {
-            Description = description,
-            Completed = completed
-        };
-        
         // Send the update
         try
         {
-            var updatedTodo = await _todoRepository.UpdateTodoAsync(updatedTodoRequest, id);
+            var updatedTodo = await _todoRepository.UpdateTodoAsync(todo, id);
             return Ok(updatedTodo);
 
         }

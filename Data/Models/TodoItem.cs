@@ -1,8 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+namespace CSharpTodoWithDapper.Data.Models;
 
-namespace CSharpTodoWithDapper.Models;
-
-public class Todo
+public class TodoItem
 {
     public int Id { get; init; }
     public string? Description { get; set; }
