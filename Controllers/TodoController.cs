@@ -1,5 +1,4 @@
 using CSharpTodoWithDapper.Data;
-using CSharpTodoWithDapper.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using CSharpTodoWithDapper.Models;
 
