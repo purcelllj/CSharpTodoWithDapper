@@ -1,4 +1,5 @@
 using CSharpTodoWithDapper.Data;
+using CSharpTodoWithDapper.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using CSharpTodoWithDapper.Models;
 
@@ -18,22 +19,22 @@ public class TodoController : ControllerBase
     }
 
     [HttpGet(Name = "GetTodos")]
-    public async Task<IActionResult> GetAsync([FromQuery]string? query)
+    public async Task<IActionResult> GetAsync([FromQuery] string? query)
     {
         // if query param exists, look for matching todos
         if (!string.IsNullOrWhiteSpace(query))
         {
             try
             {
-                var matchedTodos = await _todoRepository.GetMatchingTodosAsync(query);
-
-                if (matchedTodos.Count == 0)
+                var result = await _todoRepository.GetMatchingTodosAsync(query);
+                if (result.Count == 0)
                 {
-                    return NotFound(new { message = "The query returned 0 results."});
+                    return NotFound(new { message = "The query returned 0 results." });
                 }
 
+                var matchedTodos = result.Select(x => new Todo
+                    { Id = x.Id, Description = x.Description, Completed = x.Completed }).ToList();
                 return Ok(matchedTodos);
-
             }
             catch (Exception ex)
             {
@@ -41,7 +42,7 @@ public class TodoController : ControllerBase
                 return Problem("An unexpected error occurred.");
             }
         }
-        
+
         // get all todos
         try
         {
@@ -54,29 +55,32 @@ public class TodoController : ControllerBase
             return Problem("An unexpected error occurred.");
         }
     }
-    
+
     [HttpGet("{id}", Name = "GetById")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
         if (id < 1)
         {
-            return BadRequest(new { error = $"Invalid Id of {id}."});
+            return BadRequest(new { error = $"Invalid Id of {id}." });
         }
+
         try
         {
             var todoQueryResult = await _todoRepository.GetTodoByIdAsync(id);
             if (todoQueryResult.Count < 1)
             {
-                return NotFound(new { message = $"No todo found with the Id of {id}."});
+                return NotFound(new { message = $"No todo found with the Id of {id}." });
             }
-            return Ok(todoQueryResult);
+
+            var mappedTodos = todoQueryResult
+                .Select(x => new Todo { Id = x.Id, Description = x.Description, Completed = x.Completed }).ToList();
+            return Ok(mappedTodos);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
             return Problem("An unexpected error occurred.");
         }
-
     }
 
     [HttpPost(Name = "CreateTodo")]
@@ -84,14 +88,16 @@ public class TodoController : ControllerBase
     {
         try
         {
-            var createdTodo = await _todoRepository.AddTodoAsync(todo);
+            var result = await _todoRepository.AddTodoAsync(todo);
+            var createdTodo = new Todo
+                { Id = result.Id, Description = result.Description, Completed = result.Completed };
             return CreatedAtAction("GetById", new { id = createdTodo.Id }, createdTodo);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
             return Problem("An unexpected error occurred.");
-        } 
+        }
     }
 
     [HttpPut("{id}", Name = "UpdateTodo")]
@@ -100,9 +106,9 @@ public class TodoController : ControllerBase
         // Send the update
         try
         {
-            var updatedTodo = await _todoRepository.UpdateTodoAsync(todo, id);
+            var result = await _todoRepository.UpdateTodoAsync(todo, id);
+            var updatedTodo = new Todo { Id = id, Description = result.Description, Completed = result.Completed };
             return Ok(updatedTodo);
-
         }
         catch (Exception ex)
         {
@@ -112,22 +118,22 @@ public class TodoController : ControllerBase
     }
 
     [HttpDelete("{id}", Name = "DeleteTodo")]
-    public async Task<IActionResult> DeleteTodoAsync([FromRoute]int id)
+    public async Task<IActionResult> DeleteTodoAsync([FromRoute] int id)
     {
         if (id < 1)
         {
-            return BadRequest(new { error = $"Invalid Id of {id}."});
+            return BadRequest(new { error = $"Invalid Id of {id}." });
         }
+
         try
         {
             await _todoRepository.DeleteTodoAsync(id);
-            return Ok( new { message = $"Todo with id of {id} has been deleted successfully."});
+            return Ok(new { message = $"Todo with id of {id} has been deleted successfully." });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex.Message);
             return StatusCode(500, new { error = "An unexpected error occurred." });
-        } 
+        }
     }
-
 }

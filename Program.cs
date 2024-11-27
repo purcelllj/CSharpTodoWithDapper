@@ -1,4 +1,3 @@
-using CsharpTodoWithDapper.Data;
 using CSharpTodoWithDapper.Data;
 
 var builder = WebApplication.CreateBuilder(args);
